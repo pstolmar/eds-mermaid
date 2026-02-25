@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>EDS Mermaid Demo</title>
+  </head>
+  <body>
+    <main>
+      <!-- Mermaid block placeholder -->
+      <div class="mermaid block" data-block-name="mermaid">
+        <div>
+          <pre>
+graph TD
+  A[Start] --> B{Mermaid OK?}
+  B -->|Yes| C[Render SVG]
+  B -->|No| D[Debug]
+  D --> B
+          </pre>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
