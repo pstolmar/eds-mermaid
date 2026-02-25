@@ -1,86 +1,76 @@
-/* global document, window */
-
-function loadMermaid() {
-  if (window.mermaidLoaded) {
-    return Promise.resolve(window.mermaid);
+async function loadMermaid() {
+  if (window.mermaid) {
+    return window.mermaid;
   }
 
-  return new Promise(function (resolve, reject) {
-    var script = document.createElement('script');
+  await new Promise((resolve, reject) => {
+    const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js';
-    script.onload = function () {
-      if (!window.mermaid) {
-        reject(new Error('Mermaid did not load correctly'));
-        return;
-      }
-      window.mermaid.initialize({ startOnLoad: false });
-      window.mermaidLoaded = true;
-      resolve(window.mermaid);
-    };
-    script.onerror = function () {
-      reject(new Error('Failed to load mermaid.js'));
-    };
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load Mermaid'));
     document.head.appendChild(script);
   });
+
+  window.mermaid.initialize({ startOnLoad: false, theme: 'default' });
+  return window.mermaid;
 }
 
-function getMermaidCode(block) {
-  var codeElement = block.querySelector('pre, code');
-  if (!codeElement) {
-    return '';
-  }
-  return codeElement.textContent.trim();
-}
+function createDownloadButton(container, outputEl) {
+  const controls = document.createElement('div');
+  controls.className = 'mermaid-controls';
 
-function createDownloadButton(svgText) {
-  var button = document.createElement('button');
+  const button = document.createElement('button');
   button.type = 'button';
   button.textContent = 'Download SVG';
 
-  button.addEventListener('click', function () {
-    var blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
-    var url = URL.createObjectURL(blob);
-    var link = document.createElement('a');
-    link.href = url;
-    link.download = 'diagram.svg';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  button.addEventListener('click', () => {
+    const svgEl = outputEl.querySelector('svg');
+    if (!svgEl) {
+      return;
+    }
+
+    const serialized = new XMLSerializer().serializeToString(svgEl);
+    const blob = new Blob([serialized], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'diagram.svg';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   });
 
-  return button;
+  controls.appendChild(button);
+  container.appendChild(controls);
 }
 
 export default async function decorate(block) {
-  var code = getMermaidCode(block);
-  if (!code) {
+  const code = block.textContent.trim();
+  block.innerHTML = '';
+
+  const container = document.createElement('div');
+  container.className = 'mermaid-container';
+
+  const outputEl = document.createElement('div');
+  outputEl.className = 'mermaid-output';
+  outputEl.textContent = 'Rendering diagram…';
+
+  container.appendChild(outputEl);
+  block.appendChild(container);
+
+  try {
+    const mermaid = await loadMermaid();
+    const { svg } = await mermaid.render(`mermaid-block-${Date.now()}`, code);
+    outputEl.innerHTML = svg;
+  } catch (e) {
+    outputEl.textContent = `Error rendering Mermaid diagram: ${e.message}`;
+    // eslint-disable-next-line no-console
+    console.error(e);
     return;
   }
 
-  try {
-    var mermaid = await loadMermaid();
-    var id = 'mermaid-diagram-' + Date.now();
-
-    mermaid.render(id, code, function (svgCode) {
-      // Clear block and insert rendered SVG + button
-      while (block.firstChild) {
-        block.removeChild(block.firstChild);
-      }
-
-      var container = document.createElement('div');
-      container.className = 'mermaid-diagram';
-
-      // Insert SVG markup
-      container.innerHTML = svgCode;
-
-      var button = createDownloadButton(svgCode);
-
-      block.appendChild(container);
-      block.appendChild(button);
-    });
-  } catch (e) {
-    // If mermaid fails, leave the original text so at least the code is visible
-    // You can optionally render an error message here.
-  }
+  createDownloadButton(container, outputEl);
 }
