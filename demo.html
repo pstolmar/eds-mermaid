@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mermaid Demo</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        margin: 2rem;
+      }
+
+      .mermaid-container {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 1rem;
+        max-width: 800px;
+      }
+
+      .mermaid-controls {
+        margin-top: 0.75rem;
+      }
+
+      .mermaid-controls button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+
+      pre {
+        white-space: pre;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Mermaid Demo</h1>
+
+    <div class="mermaid-container">
+      <pre id="mermaid-source">
+graph TD
+  A[Start] --> B{Mermaid OK?}
+  B -->|Yes| C[Render SVG]
+  B -->|No| D[Debug]
+  D --> B
+      </pre>
+      <div id="mermaid-output"></div>
+      <div class="mermaid-controls">
+        <button id="download-svg">Download SVG</button>
+      </div>
+    </div>
+
+    <!-- Load Mermaid from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Initialize Mermaid
+        window.mermaid.initialize({ startOnLoad: false, theme: "default" });
+
+        const sourceEl = document.getElementById("mermaid-source");
+        const outputEl = document.getElementById("mermaid-output");
+        const button = document.getElementById("download-svg");
+
+        const code = sourceEl.textContent.trim();
+
+        // Render diagram
+        try {
+          const { svg } = await window.mermaid.render("mermaid-demo", code);
+          outputEl.innerHTML = svg;
+        } catch (e) {
+          outputEl.textContent = "Error rendering Mermaid diagram: " + e.message;
+          console.error(e);
+          return;
+        }
+
+        // Download SVG handler
+        button.addEventListener("click", () => {
+          const svgEl = outputEl.querySelector("svg");
+          if (!svgEl) {
+            return;
+          }
+          const serialized = new XMLSerializer().serializeToString(svgEl);
+          const blob = new Blob([serialized], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "diagram.svg";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+      });
+    </script>
+  </body>
+</html>
+
