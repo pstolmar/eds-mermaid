@@ -1,0 +1,52 @@
+/* blocks/mermaid-playground/mermaid-playground.css */
+
+.mermaid-playground {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 1rem;
+  max-width: 960px;
+}
+
+.mermaid-playground-editor {
+  margin-bottom: 1rem;
+}
+
+.mermaid-playground-editor label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.mermaid-playground-editor textarea {
+  width: 100%;
+  min-height: 160px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.9rem;
+  padding: 0.5rem;
+  box-sizing: border-box;
+}
+
+.mermaid-playground-controls {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.mermaid-playground-controls button {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.mermaid-playground-output-wrapper {
+  border-top: 1px solid #eee;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.mermaid-playground-output {
+  overflow-x: auto;
+}
+
