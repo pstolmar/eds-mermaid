@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Mermaid Demo</title>
+    <style>
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        margin: 2rem;
+      }
+
+      .mermaid-container {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        padding: 1rem;
+        max-width: 900px;
+      }
+
+      .mermaid-editor {
+        margin-bottom: 1rem;
+      }
+
+      .mermaid-editor label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+      }
+
+      .mermaid-editor textarea {
+        width: 100%;
+        min-height: 160px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          "Liberation Mono", "Courier New", monospace;
+        font-size: 0.9rem;
+        padding: 0.5rem;
+        box-sizing: border-box;
+      }
+
+      .mermaid-output-wrapper {
+        border-top: 1px solid #eee;
+        padding-top: 0.75rem;
+        margin-top: 0.75rem;
+      }
+
+      .mermaid-output {
+        overflow-x: auto;
+      }
+
+      .mermaid-controls {
+        margin-top: 0.75rem;
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .mermaid-controls button {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Mermaid Demo</h1>
+
+    <div class="mermaid-container">
+      <div class="mermaid-editor">
+        <label for="mermaid-source">Mermaid definition</label>
+        <textarea id="mermaid-source">
+graph TD
+  A[Start] --> B{Mermaid OK?}
+  B -->|Yes| C[Render SVG]
+  B -->|No| D[Debug]
+  D --> B
+        </textarea>
+      </div>
+
+      <div class="mermaid-controls">
+        <button id="render-diagram" type="button">Render diagram</button>
+        <button id="download-svg" type="button">Download SVG</button>
+      </div>
+
+      <div class="mermaid-output-wrapper">
+        <div id="mermaid-output" class="mermaid-output">Diagram will appear here…</div>
+      </div>
+    </div>
+
+    <!-- Load Mermaid from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // Initialize Mermaid once
+        window.mermaid.initialize({ startOnLoad: false, theme: "default" });
+
+        const sourceEl = document.getElementById("mermaid-source");
+        const outputEl = document.getElementById("mermaid-output");
+        const renderBtn = document.getElementById("render-diagram");
+        const downloadBtn = document.getElementById("download-svg");
+
+        async function renderDiagram() {
+          const code = sourceEl.value.trim();
+          if (!code) {
+            outputEl.textContent = "No Mermaid definition provided.";
+            return;
+          }
+
+          outputEl.textContent = "Rendering diagram…";
+
+          try {
+            const { svg } = await window.mermaid.render(
+              "mermaid-demo-" + Date.now(),
+              code
+            );
+            outputEl.innerHTML = svg;
+          } catch (e) {
+            console.error(e);
+            outputEl.textContent =
+              "Error rendering Mermaid diagram: " + e.message;
+          }
+        }
+
+        function downloadSvg() {
+          const svgEl = outputEl.querySelector("svg");
+          if (!svgEl) {
+            // Nothing rendered yet
+            return;
+          }
+
+          const serialized = new XMLSerializer().serializeToString(svgEl);
+          const blob = new Blob([serialized], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "diagram.svg";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        }
+
+        renderBtn.addEventListener("click", () => {
+          renderDiagram();
+        });
+
+        downloadBtn.addEventListener("click", () => {
+          downloadSvg();
+        });
+
+        // Initial render with default text
+        renderDiagram();
+      });
+    </script>
+  </body>
+</html>
